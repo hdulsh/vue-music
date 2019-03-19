@@ -1,11 +1,12 @@
 <template>
   <div class="recommend">
-    <div class="recommend-content">
+    <scroll ref="scroll" class="recommend-content" :data="discList">
+      <div>
         <div v-if="recommends.length" class="slider-wrapper">
           <slider>
             <div v-for="item in recommends" :key="item.id">
               <a :href="item.linkUrl">
-                <img :src="item.picUrl">
+                <img :src="item.picUrl" @load="loadImage" class="needsclick">
               </a>
             </div>
           </slider>
@@ -13,25 +14,42 @@
         <div class="recommend-list">
           <h1 class="list-title">热门歌单推荐</h1>
           <ul>
+            <li v-for="(item,index) in discList" :key="index" class="item">
+              <div class="icon">
+                <img width="60" height="60" v-lazy="item.imgurl">
+              </div>
+              <div class="text">
+                <h2 class="name" v-html="item.creator.name"></h2>
+                <p class="desc" v-html="item.dissname"></p>
+              </div>
+            </li>
           </ul>
         </div>
       </div>
+      <div class="loading-container" v-show="!discList.length">
+        <loading></loading>
+      </div>
+    </scroll>
   </div>
 </template>
 
 <script type="text/ecmascript-6">
+  import Scroll from 'src/base/scroll/scroll'
   import Slider from 'src/base/slider/slider'
-  import {getRecommend} from 'src/api/recommend'
+  import Loading from 'src/base/loading/loading'
+  import {getRecommend, getDiscList} from 'src/api/recommend'
   import {ERR_OK} from 'src/api/config'
 
   export default {
     data() {
       return {
-        recommends: []
+        recommends: [],
+        discList: []
       }
     },
     created() {
       this._getRecommend()
+      this._getDiscList()
     },
     methods: {
       _getRecommend() {
@@ -40,10 +58,25 @@
             this.recommends = res.data.slider
           }
         })
+      },
+      _getDiscList() {
+        getDiscList().then((res) => {
+          if (res.code === ERR_OK) {
+            this.discList = res.data.list
+          }
+        })
+      },
+      loadImage() {
+        if (!this.checkloaded) { // 添加一个标志位，如果load一次了，就不再执行onload事件了
+          this.checkloaded = true
+          this.$refs.scroll.refresh()
+        }
       }
     },
     components: {
-      Slider
+      Slider,
+      Scroll,
+      Loading
     }
   }
 </script>

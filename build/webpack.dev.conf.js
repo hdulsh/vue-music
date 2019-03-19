@@ -9,6 +9,11 @@ const CopyWebpackPlugin = require('copy-webpack-plugin')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const FriendlyErrorsPlugin = require('friendly-errors-webpack-plugin')
 const portfinder = require('portfinder')
+var express = require('express')
+var axios = require('axios')
+var app = express()
+var apiRoutes = express.Router()
+app.use('/api', apiRoutes) // 当请求路径为api下的时候 就扔给apiroutes
 
 const HOST = process.env.HOST
 const PORT = process.env.PORT && Number(process.env.PORT)
@@ -42,6 +47,22 @@ const devWebpackConfig = merge(baseWebpackConfig, {
     quiet: true, // necessary for FriendlyErrorsPlugin
     watchOptions: {
       poll: config.dev.poll,
+    },
+    before(app) {
+      app.get('/api/getDiscList', function (req, res) { // 当代理服务器接收到/api/getDiscList的get请求时
+        var url = 'https://c.y.qq.com/splcloud/fcgi-bin/fcg_get_diss_by_tag.fcg' // qq音乐真正的地址
+        axios.get(url, { // 通过axios发送http请求，同时更改referer和host，并且把参数拓展给服务端
+          headers: {
+            referer: 'https://c.y.qq.com/',
+            host: 'c.y.qq.com'
+          },
+          params: req.query // 浏览器请求该接口所带来的参数
+        }).then((response) => { // 成功回调
+          res.json(response.data) // response是QQ接口返回的，res是我们自己的。所以要把数据输出给浏览器前端
+        }).catch((e) => {
+          console.log(e)
+        })
+      })
     }
   },
   plugins: [
