@@ -1,10 +1,11 @@
 <template>
   <div class="singer">
-    歌手
+    <list-view :data="singers"></list-view>
   </div>
 </template>
 
 <script>
+  import ListView from 'src/base/listview/listview'
   import {getSingerList} from 'src/api/singer'
   import {ERR_OK} from 'src/api/config'
   import Singer from 'common/js/singer'
@@ -26,8 +27,7 @@
       _getSingerList() {
         getSingerList().then((res) => {
           if (res.code === ERR_OK) {
-            this.singers = res.data.list
-            console.log(this._normalizeSinger(this.singers))
+            this.singers = this._normalizeSinger(res.data.list)
           }
         })
       },
@@ -73,6 +73,9 @@
         })
         return hot.concat(ret)
       }
+    },
+    components: {
+      ListView
     }
   }
 </script>
