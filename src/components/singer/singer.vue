@@ -10,6 +10,7 @@
   import {getSingerList} from 'src/api/singer'
   import {ERR_OK} from 'src/api/config'
   import Singer from 'common/js/singer'
+  import {mapMutations} from 'vuex'
 
   const HOT_NAME = '热门'
   const HOT_SINGER_LEN = 10
@@ -25,10 +26,14 @@
       this._getSingerList()
     },
     methods: {
+      ...mapMutations({
+        setSinger: 'SET_SINGER' // 对应mutation-types中定义的常量
+      }),
       selectSinger(singer) {
         this.$router.push({
           path: `/singer/${singer.id}`
         })
+        this.setSinger(singer)
       },
       _getSingerList() {
         getSingerList().then((res) => {
