@@ -6,15 +6,60 @@
 
 <script type="text/ecmascript-6">
   import {mapGetters} from 'vuex'
+  import {getSingerDetail, getSongVkey} from 'src/api/singer'
+  import {ERR_OK} from 'src/api/config'
+  import {createSong} from 'common/js/song'
 
   export default {
+    data() {
+      return {
+        songs: []
+      }
+    },
     computed: {
       ...mapGetters([
         'singer' // 拿到getters.js中的singer
       ])
     },
     created() {
-      console.log(this.singer)
+      this._getDetail()
+    },
+    methods: {
+      _getDetail() {
+        if (!this.singer.id) {
+          this.$router.push('/singer')
+          return
+        }
+        getSingerDetail(this.singer.id).then((res) => {
+          if (res.code === ERR_OK) {
+            this.songs = this._normallizeSongs(res.data.list)
+          }
+        })
+      },
+      _normallizeSongs(list) {
+        let ret = []
+        list.forEach((item) => {
+          let {musicData} = item // 得到music对象
+          getSongVkey(musicData.songmid).then((res) => {
+            const songVkey = res.data.items[0].vkey
+            if (musicData.songid && musicData.albummid) {
+              ret.push(createSong(musicData, songVkey))
+            }
+          })
+//          if (musicData.songid && musicData.albummid) {
+//            getSongVkey(musicData.songmid).then((res) => {
+//              if (res.code === ERR_OK) {
+//                const sVkey = res.req_0.data.midurlinfo[0]
+//                const songVkey = sVkey.vkey
+//                const newSong = createSong(musicData, songVkey)
+//                ret.push(newSong)
+//              }
+//            })
+//          }
+        })
+        console.log(ret)
+        return ret
+      }
     }
   }
 </script>
